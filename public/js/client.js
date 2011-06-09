@@ -1,11 +1,11 @@
-window.onload = function() {
+$(function() {
     DNode.connect(function(remote) {
         remote.zing(66, function(n) {
             console.log(n);
         });
     });
 
-    var paper = Raphael(document.getElementById('container')),
+    var paper = Raphael($('#container')[0]),
     createPlayer = function() {
         var s = paper.set(),
         lFot = paper.path('M15 35L0 50'),
@@ -17,11 +17,11 @@ window.onload = function() {
             if (++t >= 2) {
                 t = 0;
                 a = ! a;
-                _.each([lFot, rFot], function(fot, i) {
+                $.each([lFot, rFot], function(i, fot) {
                     var r = i === 0 ? - 1: 1;
                     r = a ? r: - 1 * r;
-                    fot.rotate(r * 45);
-                    fot.translate(r * - 7, r * - 2);
+                    fot.rotate(r * 35);
+                    fot.translate(r * - 6, 0);
                 });
             }
         };
@@ -31,21 +31,20 @@ window.onload = function() {
         s.push(paper.circle(15, 10, 5), paper.path('M15 15L15 35'), paper.path('M0 20L30 20'));
         s.push(lFot, rFot);
         s.move = function() {
-            var x = 0,
+            var x = me.way,
             y = s.jump ? - 1: 0;
-            if (s.way === 65) x = - 1;
-            else if (s.way === 68) x = 1;
-            else if (s.way === 87) y = - 1;
             if (y === 0 && s[0].attr('cy') < paper.height - 50) {
                 y = 1;
             }
-            x !== 0 && animate();
+            if (x !== 0) {
+                animate();
+            }
             s.translate(x * s.speed, y * s.speed);
             if (s[0].attr('cx') < 15 || s[0].attr('cx') > paper.width - 15) {
-                s.translate(-x * s.speed, 0);
+                s.translate( - x * s.speed, 0);
             }
             if (s[0].attr('cy') < 5) {
-                s.translate(0, -y * s.speed);
+                s.translate(0, - y * s.speed);
             }
             return s;
         };
@@ -53,29 +52,38 @@ window.onload = function() {
         return s;
     };
 
-    var p = createPlayer();
+    var me = createPlayer();
 
     setInterval(function() {
-        p.move();
+        me.move();
     },
     50);
 
-    document.onkeydown = function(e) {
-        if (e.keyCode === 65 || e.keyCode === 68) {
-            p.way = e.keyCode;
-        } else if (e.keyCode === 87) {
-            p.jump = true;
+    $(document).keydown(function(e) {
+        switch (e.keyCode) {
+        case 65:
+            me.way = - 1;
+            break;
+        case 68:
+            me.way = 1;
+            break;
+        case 87:
+            me.jump = true;
+            break;
         }
-    };
+    });
 
-    document.onkeyup = function(e) {
-        if (e.keyCode === p.way) {
-            p.way = 0;
+    $(document).keyup(function(e) {
+        if ((e.keyCode === 65 && me.way === - 1) || (e.keyCode === 68 && me.way === 1)) {
+            me.way = 0;
         }
         if (e.keyCode === 87) {
-            p.jump = false;
+            me.jump = false;
         }
-    };
+    });
 
-};
+    $('svg').click(function() {
+        console.log(arguments);
+    });
+});
 

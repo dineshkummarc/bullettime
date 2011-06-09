@@ -14,7 +14,7 @@ server.listen(5050);
 
 var d = dnode({
     zing: function(n, cb) {
-        cb(n * 100)
+        cb(n * 100);
     }
 });
 d.listen(server);
