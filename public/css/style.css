@@ -1,0 +1,14 @@
+body {
+    background: none repeat scroll 0 0 #EFF2F3;
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+#container {
+    background-color: #FFF;
+    border: 1px solid #AFAFAF;
+    width: 900px;
+    height: 400px;
+    margin: 30px auto;
+    cursor: crosshair;
+}
+
