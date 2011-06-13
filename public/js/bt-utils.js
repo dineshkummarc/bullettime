@@ -1,10 +1,6 @@
-var bt = {};
-bt.bodies = [];
-
-bt.moveAll = function() {
-    $.each(bt.bodies, function(i, b) {
-        bt.move(b);
-    });
+var bt = {
+    width: 900,
+    height: 200
 };
 
 bt.move = function(body) {
@@ -23,9 +19,9 @@ bt.move = function(body) {
     }
 };
 
-bt.player = function(paper, x, y) {
-    var lFot = paper.path('M10 30L0 45'),
-    rFot = paper.path('M10 30L20 45'),
+bt.player = function(x, y) {
+    var lFot = bt.panel.paper.path('M10 30L0 45'),
+    rFot = bt.panel.paper.path('M10 30L20 45'),
     t = 0,
     a = false,
     player = body(x, y, {
@@ -53,14 +49,13 @@ bt.player = function(paper, x, y) {
     player.lastX = player.lastY = 0;
     player.shoot = 0;
 
-    player.set = paper.set().
-    push(paper.circle(10, 5, 5), paper.path('M10 10L10 30'), paper.path('M0 18L20 18')).
+    player.set = bt.panel.paper.set().
+    push(bt.panel.paper.circle(10, 5, 5), bt.panel.paper.path('M10 10L10 30'), bt.panel.paper.path('M0 18L20 18')).
     push(lFot, rFot);
-    bt.bodies.push(player);
     return player;
 };
 
-bt.bullet = function(paper, player, mx, my) {
+bt.bullet = function(player, mx, my) {
     var x = player.m_position.x,
     y = player.m_position.y,
     a = my - y,
@@ -77,18 +72,17 @@ bt.bullet = function(paper, player, mx, my) {
 
     bullet.lastX = bullet.lastY = 0;
     bullet.GetLinearVelocity().Set(c * 1000, s * 1000);
-    bullet.set = paper.circle(0, 0, 2);
-    bt.bodies.push(bullet);
+    bullet.set = bt.panel.paper.circle(0, 0, 2);
     return bullet;
 };
 
-bt.ground = function(paper, x, y, width, height) {
+bt.ground = function(x, y, width, height) {
     var ground = body(x, y).box(width, height, 0, 0, {
         density: 0,
         userData: 'filled'
     }).c();
-    if (paper) {
-        paper.rect(x, y, width, height);
+    if (bt.panel.paper) {
+        bt.panel.paper.rect(x, y, width, height);
     }
     return ground;
 };
