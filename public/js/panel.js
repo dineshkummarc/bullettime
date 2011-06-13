@@ -3,36 +3,47 @@ bt.panel = (function(width, height) {
     var start = function() {
         $('canvas, svg').remove();
 
-        var $canvas = $('<canvas width="' + width + '" height="' + height + '">'),
-        paper = Raphael($('#container')[0], width, height),
+        var $canvas = $('<canvas width="' + width + '" height="' + height + '">');
+        bt.panel.paper = Raphael($('#container').append($canvas)[0], width, height);
         ctx = $canvas[0].getContext('2d');
 
         $('body').keydown(function(e) {
             switch (e.keyCode) {
             case 65:
-                main.move( - 1);
+                if (bt.me.way !== - 1) {
+                    bt.ingame.move(bt.me, - 1);
+                    bt.remote.move( - 1);
+                }
                 break;
             case 68:
-                main.move(1);
+                if (bt.me.way !== 1) {
+                    bt.ingame.move(bt.me, 1);
+                    bt.remote.move(1);
+                }
                 break;
             case 87:
-                main.jump(true);
+                if (!bt.me.jumping) {
+                    bt.ingame.jump(bt.me, true);
+                }
                 break;
             }
         }).keyup(function(e) {
-            if ((e.keyCode === 65 && me.way === - 1) || (e.keyCode === 68 && me.way === 1)) {
-                main.move(0);
+            if ((e.keyCode === 65 && bt.me.way === - 1) || (e.keyCode === 68 && bt.me.way === 1)) {
+                bt.ingame.move(bt.me, 0);
+                bt.remote.move(0);
             } else if (e.keyCode === 87) {
-                main.jump(false);
+                bt.ingame.jump(bt.me, false);
             }
         });
 
         $('svg').mousedown(function() {
-            main.shooting(true);
+            bt.ingame.shooting(true);
         }).mouseup(function() {
-            main.shooting(false);
+            bt.ingame.shooting(false);
         }).mousemove(function(e) {
-            main.aim(e.offsetX, e.offsetY);
+            bt.ingame.aim(e.offsetX, e.offsetY);
+        }).mouseout(function() {
+            bt.ingame.shooting(false);
         });
     };
 

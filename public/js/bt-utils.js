@@ -45,7 +45,7 @@ bt.player = function(x, y) {
         }
     };
 
-    player.speed = 100;
+    player.speed = 200;
     player.lastX = player.lastY = 0;
     player.shoot = 0;
 
