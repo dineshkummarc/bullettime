@@ -1,67 +1,43 @@
 var bt = {};
+bt.bodies = [];
 
-bt.Game = function() {
-    OGE.World.apply(this, arguments);
-    var self = this;
-    self.bodies = [];
-    self.bullet = function(paper, player, mx, my) {
-        var bullet = new bt.Bullet(paper, player, mx, my);
-        self.addBody(bullet);
-        bullet.onCollision(function(b) {
-            if (b === self) {
-                self.removeBody(bullet);
-            }
-        });
-        return bullet;
-    };
-};
-bt.Game.prototype = new OGE.World();
-bt.Game.prototype.addBody = function(body) {
-    this.bodies.push(body);
-    OGE.World.prototype.addBody.apply(this, arguments);
-};
-
-bt.Game.prototype.step = function() {
-    $.each(this.bodies, function(i, b) {
-        b.move();
+bt.moveAll = function() {
+    $.each(bt.bodies, function(i, b) {
+        bt.move(b);
     });
-
-    OGE.World.prototype.step.apply(this, arguments);
 };
 
-bt.Game.prototype.removeBody = function(body) {
-    this.bodies = $.grep(this.bodies, function(b) {
-        return body !== b;
-    });
-    body.set.remove();
-    OGE.World.prototype.removeBody.apply(this, arguments);
-};
+bt.move = function(body) {
+    var x1 = Math.floor(body.GetOriginPosition().x),
+    x2 = body.lastX,
+    y1 = Math.floor(body.GetOriginPosition().y),
+    y2 = body.lastY;
 
-var game = new bt.Game(900, 400);
-
-OGE.Body.prototype.move = function() {
-    if (this.lastX !== this.x || this.lastY !== this.y) {
-        if (this.animate && this.lastX !== this.x) {
-            this.animate();
+    if (x1 !== x2 || y1 !== y2) {
+        if (body.animate && x1 !== x2) {
+            body.animate();
         }
-        this.set.translate(this.x - this.lastX, this.y - this.lastY);
-        this.lastX = this.x;
-        this.lastY = this.y;
-    }
-    if (this.gravity && this.direction.sin !== - 1) {
-        this.direction.sin = this.y < game.height - this.height ? 1: 0;
+        body.set.translate(x1 - x2, y1 - y2);
+        body.lastX = x1;
+        body.lastY = y1;
     }
 };
 
-bt.Player = function(paper) {
-    OGE.Body.apply(this, [0, 0, 35, 50]);
-    var lFot = paper.path('M15 35L0 50'),
-    rFot = paper.path('M15 35L30 50'),
+bt.player = function(paper, x, y) {
+    var lFot = paper.path('M10 30L0 45'),
+    rFot = paper.path('M10 30L20 45'),
     t = 0,
-    a = false;
+    a = false,
+    player = body(x, y, {
+        preventRotation: true,
+        allowSleep: false
+    }).box(20, 35).circle(10, 0, 25, {
+        density: 1,
+        friction: 1
+    }).c();
 
-    this.animate = function() {
-        if (++t >= 2) {
+    player.animate = function() {
+        if (++t >= 4) {
             t = 0;
             a = ! a;
             $.each([lFot, rFot], function(i, fot) {
@@ -73,32 +49,54 @@ bt.Player = function(paper) {
         }
     };
 
-    this.direction = new OGE.Direction();
-    this.speed = 5;
-    this.lastX = 0;
-    this.lastY = 0;
-    this.gravity = true;
-    this.active = true;
-    this.set = paper.set().
-    push(paper.circle(15, 10, 5), paper.path('M15 15L15 35'), paper.path('M0 20L30 20')).
+    player.speed = 100;
+    player.lastX = player.lastY = 0;
+    player.shoot = 0;
+
+    player.set = paper.set().
+    push(paper.circle(10, 5, 5), paper.path('M10 10L10 30'), paper.path('M0 18L20 18')).
     push(lFot, rFot);
-    return this;
+    bt.bodies.push(player);
+    return player;
 };
-bt.Player.prototype = new OGE.Body();
 
-bt.Bullet = function(paper, player, mx, my) {
-    OGE.Body.apply(this, [player.x + player.width / 2, player.y + player.height / 2, 2, 2]);
-    a = my - this.y,
-    b = mx - this.x,
-    h = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+bt.bullet = function(paper, player, mx, my) {
+    var x = player.m_position.x,
+    y = player.m_position.y,
+    a = my - y,
+    b = mx - x,
+    h = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)),
+    c = b / h,
+    s = a / h,
+    bullet = body(x + 20 * c, y + 20 * s, {
+        allowSleep: false,
+        preventRotation: true,
+        bullet: true
+    }).circle(2).c();
+    bullet.t = 'bullet';
 
-    this.direction = new OGE.Direction(b / h, a / h);
-    this.speed = 15;
-    this.active = true;
-
-    this.set = paper.set().push(paper.circle(this.x, this.y, 2));
-
-    return this;
+    bullet.lastX = bullet.lastY = 0;
+    bullet.GetLinearVelocity().Set(c * 1000, s * 1000);
+    bullet.set = paper.circle(0, 0, 2);
+    bt.bodies.push(bullet);
+    return bullet;
 };
-bt.Bullet.prototype = new OGE.Body();
+
+bt.ground = function(paper, x, y, width, height) {
+    var ground = body(x, y).box(width, height, 0, 0, {
+        density: 0,
+        userData: 'filled'
+    }).c();
+    if (paper) {
+        paper.rect(x, y, width, height);
+    }
+    return ground;
+};
+
+bt.wall = function(x, y, width, height) {
+    return body(x, y).box(width, height, 0, 0, {
+        density: 0,
+        friction: 0
+    }).c();
+};
 
