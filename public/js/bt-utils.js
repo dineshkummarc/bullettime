@@ -49,16 +49,22 @@ bt.player = function(x, y) {
     player.lastX = player.lastY = 0;
     player.shoot = 0;
 
+    player.x = function() {
+        return Math.floor(player.GetOriginPosition().x);
+    };
+
+    player.y = function() {
+        return Math.floor(player.GetOriginPosition().y);
+    };
+
     player.set = bt.panel.paper.set().
     push(bt.panel.paper.circle(10, 5, 5), bt.panel.paper.path('M10 10L10 30'), bt.panel.paper.path('M0 18L20 18')).
     push(lFot, rFot);
     return player;
 };
 
-bt.bullet = function(player, mx, my) {
-    var x = player.m_position.x,
-    y = player.m_position.y,
-    a = my - y,
+bt.bullet = function(x, y, mx, my) {
+    var a = my - y,
     b = mx - x,
     h = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)),
     c = b / h,
