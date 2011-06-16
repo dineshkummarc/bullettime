@@ -10,6 +10,7 @@ var app = express.createServer();
 app.use(express.static(__dirname + '/public'));
 app.listen(5050);
 //server.listen(10518);
+//
 var getPlayer = function(client) {
     if (!client.player) {
         client.player = {
@@ -23,7 +24,7 @@ var getPlayer = function(client) {
     return client.player;
 };
 
-var getGame = function(client) {
+var getGame = function(client, guid) {
     if (openGames.length === 0) {
         openGames.push({
             guid: s4() + s4(),
@@ -33,6 +34,14 @@ var getGame = function(client) {
         });
     }
     var game = openGames[0];
+    if (guid) {
+        game = openGames.filter(function(g) {
+            return g.guid === guid.substring(1)
+        })[0];
+        if (!game) {
+            game = openGames[0];
+        }
+    }
     game.players[client.player.guid] = client.player;
     if (Object.keys(game.players).length === 3) {
         openGames = openGames.slice(1, openGames.indexOf(game));
@@ -68,9 +77,9 @@ dnode(function(client, con) {
         delete client.game.players[client.player.guid];
     });
 
-    this.start = function(cb) {
+    this.start = function(cb, guid) {
         var player = getPlayer(client),
-        game = getGame(client);
+        game = getGame(client, guid);
         allX(client, function(c) {
             c.join(client.player);
         });

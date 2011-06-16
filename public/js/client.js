@@ -18,7 +18,7 @@ bt.client = (function() {
                 window.location.hash = game.guid;
                 bt.panel.start();
                 bt.ingame.start(game, guid);
-            });
+            }, window.location.hash);
         });
     });
     return {
