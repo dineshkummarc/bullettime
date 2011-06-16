@@ -43,7 +43,6 @@ bt.ingame = (function() {
             }
             bt.panel.move(b);
         });
-        draw.drawWorld(world, ctx);
         me.shoot = me.shoot > 0 ? me.shoot - 1: 0;
         if (me.shooting && me.shoot === 0) {
             addBullet(u.x(me), u.y(me), me.mx, me.my);

@@ -5,11 +5,9 @@ var bt = {
 bt.panel = (function() {
 
     var key, paperi, start = function() {
-        $('canvas, svg').remove();
+        $('svg').remove();
 
-        var $canvas = $('<canvas width="' + bt.width + '" height="' + bt.height + '">');
-        paper = Raphael($('#container').append($canvas)[0], bt.width, bt.height);
-        ctx = $canvas[0].getContext('2d');
+        paper = Raphael($('#container')[0], bt.width, bt.height);
 
         $('body').keydown(function(e) {
             if (e.keyCode !== key) {
