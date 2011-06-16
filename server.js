@@ -1,5 +1,5 @@
 var express = require('express'),
-    dnode = require('dnode'),
+dnode = require('dnode'),
 openGames = [],
 clients = {},
 s4 = function() {
@@ -10,7 +10,6 @@ var app = express.createServer();
 app.use(express.static(__dirname + '/public'));
 app.listen(5050);
 //server.listen(10518);
-
 var getPlayer = function(client) {
     if (!client.player) {
         client.player = {
@@ -28,6 +27,8 @@ var getGame = function(client) {
     if (openGames.length === 0) {
         openGames.push({
             guid: s4() + s4(),
+            width: 900,
+            height: 400,
             players: {}
         });
     }

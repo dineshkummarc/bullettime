@@ -7,10 +7,6 @@ bt.ingame = (function() {
     me,
     game;
 
-    worldAABB.maxVertex.Set(bt.width, bt.height);
-
-    world = new box2d.World(worldAABB, gravity, true);
-
     var Filter = function() {
         this.ShouldCollide = function(a, b) {
             $.each([[a, b], [b, a]], function(i, c) {
@@ -27,7 +23,6 @@ bt.ingame = (function() {
         };
         return this;
     };
-    world.SetFilter(new Filter());
 
     var timer;
     timer = function() {
@@ -79,11 +74,11 @@ bt.ingame = (function() {
     };
 
     var wall = function(x, y, width, height) {
+        bt.panel.rect(x, y, width, height);
         return u.body(x, y).box(width, height, 0, 0, {
             density: 0,
             friction: 0
         }).c();
-        bt.panel.rect(x, y, width, height);
     };
 
     var removePlayer = function(player) {
@@ -115,6 +110,9 @@ bt.ingame = (function() {
         game = g;
         hack2 = g;
         var k, p;
+        worldAABB.maxVertex.Set(game.width, game.height);
+        world = new box2d.World(worldAABB, gravity, true);
+        world.SetFilter(new Filter());
 
         for (k in game.players) {
             if (game.players.hasOwnProperty(k)) {
@@ -127,10 +125,10 @@ bt.ingame = (function() {
             }
         }
 
-        walls.push(ground(0, bt.height - 20, bt.width, 10));
-        walls.push(wall(0, 0, bt.width, 1));
-        walls.push(wall(0, 0, 1, bt.height));
-        walls.push(wall(bt.width - 10, 0, 1, bt.height));
+        walls.push(ground(0, game.height - 20, game.width, 10));
+        walls.push(wall(0, 0, game.width, 1));
+        walls.push(wall(0, 0, 1, game.height));
+        walls.push(wall(game.width - 10, 0, 1, game.height));
         timer();
     };
 
@@ -210,7 +208,7 @@ bt.ingame = (function() {
     };
 
     var dead = function(guid, x, y) {
-        var body = game.players[guid].body
+        var body = game.players[guid].body;
         bt.panel.hide(body, function() {
             setTimeout(function() {
                 body.SetOriginPosition(new box2d.Vec2(x, y), 0);

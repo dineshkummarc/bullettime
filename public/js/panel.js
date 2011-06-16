@@ -1,7 +1,5 @@
-var bt = {
-    width: 900,
-    height: 200
-};
+var bt = {};
+
 bt.panel = (function() {
 
     var key, paperi, start = function() {
@@ -66,7 +64,7 @@ bt.panel = (function() {
         push(lFot, rFot);
     };
 
-    var move = function(body, x1, x2, y1, y2) {
+    var move = function(body) {
         var x1 = u.x(body),
         x2 = body.lastX,
         y1 = u.y(body),

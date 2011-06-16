@@ -1,6 +1,6 @@
 var u = {};
 u.body = function(x, y, opts) {
-    return new function() {
+    return (function() {
         var self = this,
         bd = new box2d.BodyDef(),
         addSd = function(sd, opts) {
@@ -36,7 +36,7 @@ u.body = function(x, y, opts) {
             return world.CreateBody(bd);
         };
         return self;
-    };
+    }());
 };
 
 u.x = function(body) {
