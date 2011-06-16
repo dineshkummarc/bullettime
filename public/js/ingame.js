@@ -1,10 +1,11 @@
-var hack;
+var hack, hack2;
 bt.ingame = (function() {
     var worldAABB = new box2d.AABB(),
     gravity = new box2d.Vec2(0, 600),
     walls = [],
     bodies = [],
-    me;
+    me,
+    game;
 
     worldAABB.maxVertex.Set(bt.width, bt.height);
 
@@ -19,7 +20,7 @@ bt.ingame = (function() {
                     bt.panel.remove(a.m_body);
                     world.DestroyBody(a.m_body);
                     if (b.m_body === me) {
-                        bt.remote.hit();
+                        bt.client.remote().hit();
                     }
                 }
             });
@@ -87,7 +88,8 @@ bt.ingame = (function() {
     };
 
     var removePlayer = function(player) {
-        world.DestroyBody(player.p);
+        bt.panel.remove(player.body);
+        world.DestroyBody(player.body);
     };
 
     var addBullet = function(x, y, mx, my) {
@@ -110,13 +112,15 @@ bt.ingame = (function() {
         return bullet;
     };
 
-    var start = function(game, guid) {
+    var start = function(g, guid) {
+        game = g;
+        hack2 = g;
         var k, p;
 
         for (k in game.players) {
             if (game.players.hasOwnProperty(k)) {
                 p = game.players[k];
-                addPlayer(p);
+                game.players[k] = addPlayer(p);
                 if (k === guid) {
                     me = p.body;
                     hack = me;
@@ -137,7 +141,6 @@ bt.ingame = (function() {
     };
 
     var pressRight = function() {
-        console.log('R')
         me.way = 1;
         bt.client.remote().move(u.x(me), u.y(me), me.way);
     };
@@ -175,6 +178,49 @@ bt.ingame = (function() {
         me.my = e.offsetY;
     };
 
+    var join = function(player) {
+        game.players[player.guid] = addPlayer(player);
+    };
+
+    var move = function(guid, x, y, way) {
+        var body = game.players[guid].body;
+        body.SetOriginPosition(new box2d.Vec2(x, y), 0);
+        body.way = way;
+    };
+
+    var leave = function(guid) {
+        removePlayer(game.players[guid]);
+    };
+
+    var jumping = function(guid, x, y, jumping) {
+        var body = game.players[guid].body;
+        body.jumping = jumping;
+        body.SetOriginPosition(new box2d.Vec2(x, y), 0);
+    };
+
+    var bullet = function(guid, x, y, mx, my) {
+        addBullet(x, y, mx, my);
+    };
+
+    var hit = function(guid) {
+        var player = game.players[guid];
+        bt.panel.shake(player.body, 10);
+        if (player.hp <= 0) {
+            bt.panel.hide(player.body);
+        }
+    };
+
+    var dead = function(guid, x, y) {
+        var body = game.players[guid].body
+        bt.panel.hide(body, function() {
+            setTimeout(function() {
+                body.SetOriginPosition(new box2d.Vec2(x, y), 0);
+                bt.panel.show(body);
+            },
+            1000);
+        });
+    };
+
     return {
         addPlayer: addPlayer,
         removePlayer: removePlayer,
@@ -188,7 +234,14 @@ bt.ingame = (function() {
         releaseUp: releaseUp,
         mousedown: mousedown,
         mouseup: mouseup,
-        mousemove: mousemove
+        mousemove: mousemove,
+        join: join,
+        move: move,
+        leave: leave,
+        jumping: jumping,
+        bullet: bullet,
+        hit: hit,
+        dead: dead
     };
 } ());
 

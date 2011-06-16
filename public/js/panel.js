@@ -87,43 +87,42 @@ bt.panel = (function() {
     };
 
     var shake;
-    shake = function(set, times) {
+    shake = function(body, times) {
         if (times > 0) {
             var r = Math.floor(Math.random() * 4 - 2);
-            set.animate({
+            body.set.animate({
                 translation: r + ' ' + r
             },
             10, function() {
                 r *= - 1;
-                set.animate({
+                body.set.animate({
                     translation: r + ' ' + r
                 },
-                10, shake(set, times - 1));
+                10, shake(body, times - 1));
             });
         }
     };
 
-    var hide = function(set, cb) {
-        set.animate({
+    var hide = function(body, cb) {
+        body.set.animate({
             scale: 0.01
         },
         1000, cb);
     };
 
-    var show = function(set) {
-        set.animate({
+    var show = function(body) {
+        body.set.animate({
             scale: 1.5
         },
-        500, function() {
-            set.animate({
+        500, '<>', function() {
+            body.set.animate({
                 scale: 1
             },
-            500);
+            500, '<>');
         });
     };
 
     var rect = function(x, y, width, height) {
-        console.log(x, y, width, height)
         paper.rect(x, y, width, height);
     };
 
