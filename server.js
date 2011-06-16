@@ -1,19 +1,15 @@
-var http = require('http'),
-nodeStatic = require('node-static'),
-dnode = require('dnode'),
+var express = require('express'),
+    dnode = require('dnode'),
 openGames = [],
 clients = {},
 s4 = function() {
     return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
 };
 
-var server = http.createServer(function(req, res) {
-    var publicFiles = new nodeStatic.Server('public', {
-        cache: false
-    });
-
-    publicFiles.serve(req, res);
-});
+var app = express.createServer();
+app.use(express.static(__dirname + '/public'));
+app.listen(5050);
+//server.listen(10518);
 
 var getPlayer = function(client) {
     if (!client.player) {
@@ -57,7 +53,11 @@ var allX = function(client, cb) {
     all(client, cb, true);
 };
 
-server.listen(10518);
+var updatePlayer = function(client, x, y) {
+    client.player.x = x;
+    client.player.y = y;
+    return client.player;
+};
 
 dnode(function(client, con) {
     con.on('end', function() {
@@ -77,18 +77,16 @@ dnode(function(client, con) {
     };
 
     this.move = function(x, y, way) {
-        client.player.x = x;
-        client.player.y = y;
+        var p = updatePlayer(client, x, y);
         allX(client, function(c) {
-            c.move(client.player.guid, x, y, way);
+            c.move(p.guid, x, y, way);
         });
     };
 
     this.jumping = function(x, y, jumping) {
-        client.player.x = x;
-        client.player.y = y;
+        var p = updatePlayer(client, x, y);
         allX(client, function(c) {
-            c.jumping(client.player.guid, x, y, jumping);
+            c.jumping(p.guid, x, y, jumping);
         });
     };
 
@@ -112,5 +110,5 @@ dnode(function(client, con) {
             });
         }
     };
-}).listen(server);
+}).listen(app);
 

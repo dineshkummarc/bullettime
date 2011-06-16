@@ -10,10 +10,7 @@ bt.move = function(body) {
     y2 = body.lastY;
 
     if (x1 !== x2 || y1 !== y2) {
-        if (body.animate && x1 !== x2) {
-            body.animate();
-        }
-        body.set.translate(x1 - x2, y1 - y2);
+        bt.panel.move(body);
         body.lastX = x1;
         body.lastY = y1;
     }

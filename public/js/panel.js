@@ -1,51 +1,89 @@
+var bt = {
+    width: 900,
+    height: 200
+};
 bt.panel = (function() {
 
-    var start = function() {
+    var key, paperi, start = function() {
         $('canvas, svg').remove();
 
         var $canvas = $('<canvas width="' + bt.width + '" height="' + bt.height + '">');
-        bt.panel.paper = Raphael($('#container').append($canvas)[0], bt.width, bt.height);
+        paper = Raphael($('#container').append($canvas)[0], bt.width, bt.height);
         ctx = $canvas[0].getContext('2d');
 
         $('body').keydown(function(e) {
-            switch (e.keyCode) {
-            case 65:
-                if (bt.me.way !== - 1) {
-                    bt.me.way = - 1;
-                    bt.remote.move(bt.me.x(), bt.me.y(), - 1);
+            if (e.keyCode !== key) {
+                key = e.keyCode;
+                switch (e.keyCode) {
+                case 65:
+                    bt.ingame.pressLeft();
+                    break;
+                case 68:
+                    bt.ingame.pressRight();
+                    break;
+                case 87:
+                    bt.ingame.pressUp();
+                    break;
                 }
-                break;
-            case 68:
-                if (bt.me.way !== 1) {
-                    bt.me.way = 1;
-                    bt.remote.move(bt.me.x(), bt.me.y(), 1);
-                }
-                break;
-            case 87:
-                if (!bt.me.jumping) {
-                    bt.me.jumping = true;
-                    bt.remote.jumping(bt.me.x(), bt.me.y(), true);
-                }
-                break;
             }
         }).keyup(function(e) {
-            if ((e.keyCode === 65 && bt.me.way === - 1) || (e.keyCode === 68 && bt.me.way === 1)) {
-                bt.me.way = 0;
-                bt.remote.move(bt.me.x(), bt.me.y(), 0);
-            } else if (e.keyCode === 87) {
-                bt.remote.jumping(bt.me.x(), bt.me.y(), false);
-                bt.me.jumping = false;
+            key = null;
+            switch (e.keyCode) {
+            case 65:
+                bt.ingame.releaseLeft();
+                break;
+            case 68:
+                bt.ingame.releaseRight();
+                break;
+            case 87:
+                bt.ingame.releaseUp();
+                break;
             }
         });
 
-        $('svg').mousedown(function() {
-            bt.me.shooting = true;
-        }).mouseup(function() {
-            bt.me.shooting = false;
-        }).mousemove(function(e) {
-            bt.me.mx = e.offsetX;
-            bt.me.my = e.offsetY;
-        });
+        $('svg').mousedown(bt.ingame.mousedown).mouseup(bt.ingame.mouseup).mousemove(bt.ingame.mousemove);
+    };
+
+    var addPlayer = function(player) {
+        var lFot = paper.path('M10 30L0 45'),
+        rFot = paper.path('M10 30L20 45'),
+        t = 0,
+        a = false;
+
+        player.animate = function() {
+            if (++t >= 4) {
+                t = 0;
+                a = ! a;
+                $.each([lFot, rFot], function(i, fot) {
+                    var r = i === 0 ? - 1: 1;
+                    r = a ? r: - 1 * r;
+                    fot.rotate(r * 35);
+                    fot.translate(r * - 6, 0);
+                });
+            }
+        };
+
+        player.set = paper.set().
+        push(paper.circle(10, 5, 5), paper.path('M10 10L10 30'), paper.path('M0 18L20 18')).
+        push(lFot, rFot);
+    };
+
+    var move = function(body, x1, x2, y1, y2) {
+        var x1 = u.x(body),
+        x2 = body.lastX,
+        y1 = u.y(body),
+        y2 = body.lastY;
+
+        if (x1 !== x2 || y1 !== y2) {
+            if (body.set) {
+                body.set.translate(x1 - x2, y1 - y2);
+            }
+            body.lastX = x1;
+            body.lastY = y1;
+        }
+        if (body.animate && x1 !== x2) {
+            body.animate();
+        }
     };
 
     var shake;
@@ -84,11 +122,31 @@ bt.panel = (function() {
         });
     };
 
+    var rect = function(x, y, width, height) {
+        console.log(x, y, width, height)
+        paper.rect(x, y, width, height);
+    };
+
+    var addBullet = function(bullet) {
+        bullet.set = paper.circle(0, 0, 2);
+    };
+
+    var remove = function(body) {
+        if (body.set) {
+            body.set.remove();
+        }
+    };
+
     return {
         start: start,
+        addPlayer: addPlayer,
+        move: move,
         shake: shake,
         hide: hide,
-        show: show
+        show: show,
+        rect: rect,
+        addBullet: addBullet,
+        remove: remove
     };
 } ());
 

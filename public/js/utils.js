@@ -1,4 +1,5 @@
-var body = function(x, y, opts) {
+var u = {};
+u.body = function(x, y, opts) {
     return new function() {
         var self = this,
         bd = new box2d.BodyDef(),
@@ -36,5 +37,13 @@ var body = function(x, y, opts) {
         };
         return self;
     };
+};
+
+u.x = function(body) {
+    return Math.floor(body.GetOriginPosition().x);
+};
+
+u.y = function(body) {
+    return Math.floor(body.GetOriginPosition().y);
 };
 
