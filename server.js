@@ -7,7 +7,7 @@ s4 = function() {
 };
 
 var app = express.createServer();
-app.use(express.static('/public'));
+app.use(express.static('public'));
 app.listen(10518);
 
 var getPlayer = function(client) {
