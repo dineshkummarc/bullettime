@@ -8,9 +8,8 @@ s4 = function() {
 
 var app = express.createServer();
 app.use(express.static(__dirname + '/public'));
-app.listen(5050);
-//server.listen(10518);
-//
+app.listen(10518);
+
 var getPlayer = function(client) {
     if (!client.player) {
         client.player = {
