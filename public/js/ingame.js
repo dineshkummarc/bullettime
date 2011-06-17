@@ -1,4 +1,3 @@
-var hack, hack2;
 bt.ingame = (function() {
     var worldAABB = new box2d.AABB(),
     gravity = new box2d.Vec2(0, 600),
@@ -108,7 +107,6 @@ bt.ingame = (function() {
 
     var start = function(g, guid) {
         game = g;
-        hack2 = g;
         var k, p;
         worldAABB.maxVertex.Set(game.width, game.height);
         world = new box2d.World(worldAABB, gravity, true);
@@ -120,7 +118,6 @@ bt.ingame = (function() {
                 game.players[k] = addPlayer(p);
                 if (k === guid) {
                     me = p.body;
-                    hack = me;
                 }
             }
         }
