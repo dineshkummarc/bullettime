@@ -19,6 +19,11 @@ bt.ingame = (function() {
                     }
                 }
             });
+            if (a.m_body.t === 'player' && b.m_body.t === 'player') {
+                return false;
+            } else if (a.m_body.y === 'bullet' && b.m_body.t === 'bullet') {
+                return false;
+            }
         };
         return this;
     };
@@ -47,7 +52,7 @@ bt.ingame = (function() {
     };
 
     var addPlayer = function(player) {
-        player.body = u.body(player.x, player.y, {
+        var body = u.body(player.x, player.y, {
             preventRotation: true,
             allowSleep: false
         }).box(20, 35).circle(10, 0, 25, {
@@ -55,11 +60,13 @@ bt.ingame = (function() {
             friction: 1
         }).c();
 
-        player.body.speed = 200;
-        player.body.lastX = player.body.lastY = 0;
-        player.body.shoot = 0;
-        bodies.push(player.body);
-        bt.panel.addPlayer(player.body);
+        body.speed = 200;
+        body.lastX = body.lastY = 0;
+        body.shoot = 0;
+        body.t = 'player';
+        bodies.push(body);
+        bt.panel.addPlayer(body);
+        player.body = body;
         return player;
     };
 
