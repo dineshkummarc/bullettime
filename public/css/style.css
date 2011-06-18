@@ -11,7 +11,3 @@ body {
     margin: 30px auto;
     cursor: crosshair;
 }
-
-svg, canvas {
-    border: solid 1px;
-}
