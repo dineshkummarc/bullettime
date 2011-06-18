@@ -1,169 +1,122 @@
 bt.ingame = (function() {
-    var worldAABB = new box2d.AABB(),
-    gravity = new box2d.Vec2(0, 600),
-    walls = [],
-    bodies = [],
-    me,
-    game;
-
-    var Filter = function() {
-        this.ShouldCollide = function(a, b) {
-            $.each([[a, b], [b, a]], function(i, c) {
-                var a = c[0],
-                b = c[1];
-                if (a.m_body.t === 'bullet') {
-                    bt.panel.remove(a.m_body);
-                    world.DestroyBody(a.m_body);
-                    if (b.m_body === me) {
-                        bt.client.remote().hit();
-                    }
-                }
-            });
-            if (a.m_body.t === 'player' && b.m_body.t === 'player') {
-                return false;
-            } else if (a.m_body.y === 'bullet' && b.m_body.t === 'bullet') {
-                return false;
-            }
-        };
-        return this;
-    };
-
-    var timer;
-    timer = function() {
-        world.Step(1.0 / 60, 1);
-
-        $.each(bodies, function(i, b) {
-            var v = b.GetLinearVelocity();
-            if (typeof b.way !== 'undefined') {
-                v.Set(b.way * b.speed, v.y);
-            }
-            if (b.jumping) {
-                v.y = - b.speed;
-            }
-            bt.panel.move(b);
-        });
-        me.shoot = me.shoot > 0 ? me.shoot - 1: 0;
-        if (me.shooting && me.shoot === 0) {
-            addBullet(u.x(me), u.y(me), me.mx, me.my);
-            me.shoot = me.shooting ? 10: 0;
-            bt.client.remote().bullet(u.x(me), u.y(me), me.mx, me.my);
-        }
-        setTimeout(timer, 1000 / 60);
-    };
-
-    var addPlayer = function(player) {
-        var body = u.body(player.x, player.y, {
-            preventRotation: true,
-            allowSleep: false
-        }).box(20, 35).circle(10, 0, 25, {
-            density: 1,
-            friction: 1
-        }).c();
-
-        body.speed = 200;
-        body.lastX = body.lastY = 0;
-        body.shoot = 0;
-        body.t = 'player';
-        bodies.push(body);
-        bt.panel.addPlayer(body);
-        player.body = body;
-        return player;
-    };
-
-    var ground = function(x, y, width, height) {
-        var g = u.body(x, y).box(width, height, 0, 0, {
-            density: 0,
-            userData: 'filled'
-        }).c();
-        bt.panel.rect(x, y, width, height);
-        return g;
-    };
-
-    var wall = function(x, y, width, height) {
-        bt.panel.rect(x, y, width, height);
-        return u.body(x, y).box(width, height, 0, 0, {
-            density: 0,
-            friction: 0
-        }).c();
-    };
-
-    var removePlayer = function(player) {
-        bt.panel.remove(player.body);
-        world.DestroyBody(player.body);
-    };
-
-    var addBullet = function(x, y, mx, my) {
-        var a = my - y,
-        b = mx - x,
-        h = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)),
-        c = b / h,
-        s = a / h,
-        bullet = u.body(x + 20 * c, y + 20 * s, {
-            allowSleep: false,
-            preventRotation: true,
-            bullet: true
-        }).circle(2).c();
-        bullet.t = 'bullet';
-
-        bullet.lastX = bullet.lastY = 0;
-        bullet.GetLinearVelocity().Set(c * 1000, s * 1000);
-        bt.panel.addBullet(bullet);
-        bodies.push(bullet);
-        return bullet;
-    };
+    var me, game, bulletCount = 0;
 
     var start = function(g, guid) {
         game = g;
         var k, p;
-        worldAABB.maxVertex.Set(game.width, game.height);
-        world = new box2d.World(worldAABB, gravity, true);
-        world.SetFilter(new Filter());
 
         for (k in game.players) {
             if (game.players.hasOwnProperty(k)) {
                 p = game.players[k];
                 game.players[k] = addPlayer(p);
                 if (k === guid) {
-                    me = p.body;
+                    me = p;
                 }
             }
         }
 
-        walls.push(ground(0, game.height - 20, game.width, 10));
-        walls.push(wall(0, 0, game.width, 1));
-        walls.push(wall(0, 0, 1, game.height));
-        walls.push(wall(game.width - 10, 0, 1, game.height));
-        timer();
+        $.playground().registerCallback(function() {
+            var m = function($this, body) {
+                if ((!body.way || body.way.sin === 0) && body.y < game.height - body.height) {
+                    body.y += body.speed;
+                }
+                if (body.way) {
+                    body.x += body.speed * body.way.cos;
+                    body.y += body.speed * body.way.sin;
+                }
+
+                $this.css('left', body.x).css('top', body.y);
+            };
+            $('.player').each(function() {
+                var $this = $(this),
+                body = $this.data('body');
+                m($this, body);
+                body.x = body.x < 0 ? 0: body.x;
+                body.x = body.x + body.width > game.width ? game.width - body.width: body.x;
+                body.y = body.y < 0 ? 0: body.y;
+                body.y = body.y + body.height > game.height ? game.height - body.height: body.y;
+                $this.collision('.group,.bullet').each(function(i, e) {
+                    $(e).remove();
+                    if (body.guid === me.guid) {
+                        bt.client.remote().hit();
+                    }
+                });
+            });
+            $('.bullet').each(function()  {
+                var $this = $(this),
+                body = $this.data('body');
+                m($this, body);
+                if (body.x < 0 || body.x + body.width > game.width || body.y < 0 || body.y + body.height > game.height) {
+                    $this.remove();
+                }
+            });
+            me.shoot = me.shoot > 0 ? me.shoot - 1: 0;
+            if (me.shooting && me.shoot === 0) {
+                addBullet(me.x, me.y, me.mx, me.my);
+                me.shoot = me.shooting ? 10: 0;
+                bt.client.remote().bullet(me.x, me.y, me.mx, me.my);
+            }
+            $('.player').each(function() {});
+        },
+        30).startGame();
     };
 
-    var pressLeft = function() {
-        me.way = - 1;
-        bt.client.remote().move(u.x(me), u.y(me), me.way);
+    var addPlayer = function(player) {
+        player.shoot = 0;
+        $('#players').addSprite('player-' + player.guid, {
+            animation: new $.gameQuery.Animation({
+                imageURL: '/images/face.png'
+            }),
+            width: player.width,
+            height: player.height,
+            posx: player.x,
+            posy: player.y
+        });
+        $('#player-' + player.guid).addClass('player').data('body', player);
     };
 
-    var pressRight = function() {
-        me.way = 1;
-        bt.client.remote().move(u.x(me), u.y(me), me.way);
+    var addBullet = function(x, y, mx, my) {
+        x += me.width / 2;
+        y += me.height / 2;
+        var a = my - y,
+        b = mx - x,
+        h = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)),
+        cos = b / h,
+        sin = a / h,
+        bullet = {
+            x: x + cos * me.width,
+            y: y + sin * me.height,
+            width: 10,
+            height: 10,
+            speed: 20,
+            way: {
+                cos: b / h,
+                sin: a / h
+            }
+        };
+        var id = 'bullet-' + bulletCount++;
+        $('#bullets').addSprite(id, {
+            animation: new $.gameQuery.Animation({
+                imageURL: '/images/bullet.png'
+            }),
+            width: bullet.width,
+            height: bullet.height,
+            posx: bullet.x,
+            posy: bullet.y
+        });
+        $('#' + id).addClass('bullet').data('body', bullet);
     };
 
-    var pressUp = function() {
-        me.jumping = true;
-        bt.client.remote().jumping(u.x(me), u.y(me), me.jumping);
-    };
+    var updatePlayer = function(guid, x, y) {
+        var body = $('#player-' + guid).css('left', x).css('top', y).data('body');
+        body.x = x;
+        body.y = y;
+        return body;
+    }
 
-    var releaseLeft = function() {
-        me.way = me.way === - 1 ? 0: me.way;
-        bt.client.remote().move(u.x(me), u.y(me), me.way);
-    };
-
-    var releaseRight = function() {
-        me.way = me.way === 1 ? 0: me.way;
-        bt.client.remote().move(u.x(me), u.y(me), me.way);
-    };
-
-    var releaseUp = function() {
-        me.jumping = false;
-        bt.client.remote().jumping(u.x(me), u.y(me), me.jumping);
+    var setWay = function(way) {
+        me.way = way;
+        bt.client.remote().move(me.x, me.y, me.way);
     };
 
     var mousedown = function() {
@@ -179,68 +132,39 @@ bt.ingame = (function() {
         me.my = e.offsetY;
     };
 
-    var join = function(player) {
-        game.players[player.guid] = addPlayer(player);
-    };
-
     var move = function(guid, x, y, way) {
-        var body = game.players[guid].body;
-        body.SetOriginPosition(new box2d.Vec2(x, y), 0);
-        body.way = way;
+        updatePlayer(guid, x, y).way = way;
     };
 
     var leave = function(guid) {
-        removePlayer(game.players[guid]);
+        $('#player-' + guid).remove();
     };
 
     var jumping = function(guid, x, y, jumping) {
-        var body = game.players[guid].body;
-        body.jumping = jumping;
-        body.SetOriginPosition(new box2d.Vec2(x, y), 0);
+        updatePlayer(guid, x, y).jumping = jumping;
     };
 
-    var bullet = function(guid, x, y, mx, my) {
-        addBullet(x, y, mx, my);
-    };
-
-    var hit = function(guid) {
-        var player = game.players[guid];
-        bt.panel.shake(player.body, 10);
-        if (player.hp <= 0) {
-            bt.panel.hide(player.body);
-        }
-    };
+    var hit = function(guid) {};
 
     var dead = function(guid, x, y) {
-        var body = game.players[guid].body;
-        bt.panel.hide(body, function() {
-            setTimeout(function() {
-                body.SetOriginPosition(new box2d.Vec2(x, y), 0);
-                bt.panel.show(body);
-            },
-            1000);
-        });
+        $('#player-' + guid).hide();
+        updatePlayer(guid, x, y);
+        setTimeout(function() {
+            $('#player-' + guid).show();
+        }, 1000);
     };
 
     return {
         addPlayer: addPlayer,
-        removePlayer: removePlayer,
         start: start,
         addBullet: addBullet,
-        pressLeft: pressLeft,
-        pressRight: pressRight,
-        pressUp: pressUp,
-        releaseLeft: releaseLeft,
-        releaseRight: releaseRight,
-        releaseUp: releaseUp,
+        setWay: setWay,
         mousedown: mousedown,
         mouseup: mouseup,
         mousemove: mousemove,
-        join: join,
         move: move,
         leave: leave,
         jumping: jumping,
-        bullet: bullet,
         hit: hit,
         dead: dead
     };

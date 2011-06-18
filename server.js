@@ -8,7 +8,8 @@ s4 = function() {
 
 var app = express.createServer();
 app.use(express.static('public'));
-app.listen(10518);
+//app.listen(10518);
+app.listen(5050);
 
 var getPlayer = function(client) {
     if (!client.player) {
@@ -16,7 +17,10 @@ var getPlayer = function(client) {
             guid: s4() + s4(),
             x: 0,
             y: 0,
-            hp: 100
+            width: 48,
+            height: 48,
+            hp: 100,
+            speed: 5
         };
     }
     clients[client.player.guid] = client;
@@ -101,7 +105,7 @@ dnode(function(client, con) {
 
     this.bullet = function(x, y, mx, my) {
         allX(client, function(c) {
-            c.bullet(client.player.guid, x, y, mx, my);
+            c.bullet(x, y, mx, my);
         });
     };
 
