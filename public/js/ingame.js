@@ -112,7 +112,7 @@ bt.ingame = (function() {
         body.x = x;
         body.y = y;
         return body;
-    }
+    };
 
     var setWay = function(way) {
         me.way = way;
